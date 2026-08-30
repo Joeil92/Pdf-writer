@@ -98,18 +98,21 @@ export function usePdfThumbnails(file: File | null): UsePdfThumbnailsResult {
 
 interface UsePdfPageResult {
   dataUrl: string | null
+  pageCount: number | null
   isLoading: boolean
   error: string | null
 }
 
 export function usePdfPage(file: File | null, pageNumber: number): UsePdfPageResult {
   const [dataUrl, setDataUrl] = useState<string | null>(null)
+  const [pageCount, setPageCount] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!file) {
       setDataUrl(null)
+      setPageCount(null)
       setError(null)
       return
     }
@@ -127,6 +130,7 @@ export function usePdfPage(file: File | null, pageNumber: number): UsePdfPageRes
 
         if (!cancelled) {
           setDataUrl(pageDataUrl)
+          setPageCount(pdf.numPages)
         }
       } catch (err) {
         if (!cancelled) {
@@ -146,5 +150,5 @@ export function usePdfPage(file: File | null, pageNumber: number): UsePdfPageRes
     }
   }, [file, pageNumber])
 
-  return { dataUrl, isLoading, error }
+  return { dataUrl, pageCount, isLoading, error }
 }

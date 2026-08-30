@@ -1,7 +1,7 @@
-import PdfThumbnailList from '@features/preview-pdf-pages/pdf-thumbnail-list.ui'
 import { usePdfThumbnails } from '@entities/document/document.hooks'
 import { documentQueryOptions } from '@renderer/entities/document/document.api'
 import { setActiveDocumentPage } from '@renderer/entities/document/document.lib'
+import PdfThumbnailList from '@renderer/features/document/preview-pdf-pages/pdf-thumbnail-list.ui'
 import { Loader } from '@renderer/shared/ui/loader'
 import { useQuery } from '@tanstack/react-query'
 
