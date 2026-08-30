@@ -7,4 +7,5 @@ export interface Document {
   id: string
   title: string
   file: File
+  activePage: number
 }

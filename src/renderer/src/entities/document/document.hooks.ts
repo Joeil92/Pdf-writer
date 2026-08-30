@@ -4,6 +4,7 @@ import '@renderer/shared/lib/v8-polyfill'
 import { PdfPageThumbnail } from './document.types'
 
 const THUMBNAIL_SCALE = 0.3
+const PAGE_SCALE = 1.5
 
 let pdfWorker: pdfjsLib.PDFWorker | null = null
 
@@ -15,6 +16,26 @@ function getPdfWorker(): pdfjsLib.PDFWorker {
     pdfWorker = pdfjsLib.PDFWorker.create({ port: worker })
   }
   return pdfWorker
+}
+
+async function loadPdfDocument(file: File): Promise<pdfjsLib.PDFDocumentProxy> {
+  const data = await file.arrayBuffer()
+  return pdfjsLib.getDocument({ data, worker: getPdfWorker() }).promise
+}
+
+async function renderPageToDataUrl(
+  pdf: pdfjsLib.PDFDocumentProxy,
+  pageNumber: number,
+  scale: number
+): Promise<string> {
+  const page = await pdf.getPage(pageNumber)
+  const viewport = page.getViewport({ scale })
+  const canvas = document.createElement('canvas')
+  canvas.width = viewport.width
+  canvas.height = viewport.height
+
+  await page.render({ canvas, viewport }).promise
+  return canvas.toDataURL()
 }
 
 interface UsePdfThumbnailsResult {
@@ -43,19 +64,12 @@ export function usePdfThumbnails(file: File | null): UsePdfThumbnailsResult {
       setError(null)
 
       try {
-        const data = await pdfFile.arrayBuffer()
-        const pdf = await pdfjsLib.getDocument({ data, worker: getPdfWorker() }).promise
+        const pdf = await loadPdfDocument(pdfFile)
         const pages: PdfPageThumbnail[] = []
 
         for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-          const page = await pdf.getPage(pageNumber)
-          const viewport = page.getViewport({ scale: THUMBNAIL_SCALE })
-          const canvas = document.createElement('canvas')
-          canvas.width = viewport.width
-          canvas.height = viewport.height
-
-          await page.render({ canvas, viewport }).promise
-          pages.push({ pageNumber, dataUrl: canvas.toDataURL() })
+          const dataUrl = await renderPageToDataUrl(pdf, pageNumber, THUMBNAIL_SCALE)
+          pages.push({ pageNumber, dataUrl })
         }
 
         if (!cancelled) {
@@ -80,4 +94,57 @@ export function usePdfThumbnails(file: File | null): UsePdfThumbnailsResult {
   }, [file])
 
   return { thumbnails, isLoading, error }
+}
+
+interface UsePdfPageResult {
+  dataUrl: string | null
+  isLoading: boolean
+  error: string | null
+}
+
+export function usePdfPage(file: File | null, pageNumber: number): UsePdfPageResult {
+  const [dataUrl, setDataUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!file) {
+      setDataUrl(null)
+      setError(null)
+      return
+    }
+
+    const pdfFile = file
+    let cancelled = false
+
+    async function renderPage(): Promise<void> {
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const pdf = await loadPdfDocument(pdfFile)
+        const pageDataUrl = await renderPageToDataUrl(pdf, pageNumber, PAGE_SCALE)
+
+        if (!cancelled) {
+          setDataUrl(pageDataUrl)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Erreur de chargement de la page')
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    renderPage()
+
+    return () => {
+      cancelled = true
+    }
+  }, [file, pageNumber])
+
+  return { dataUrl, isLoading, error }
 }

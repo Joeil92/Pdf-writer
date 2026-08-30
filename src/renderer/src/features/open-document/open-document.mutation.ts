@@ -16,7 +16,8 @@ export function useOpenDocumentMutation(
     mutationFn: async (file: File): Promise<Document> => ({
       id: crypto.randomUUID(),
       title: file.name,
-      file
+      file,
+      activePage: 1
     }),
 
     onMutate,

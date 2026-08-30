@@ -1,6 +1,7 @@
 import PdfThumbnailList from '@features/preview-pdf-pages/pdf-thumbnail-list.ui'
 import { usePdfThumbnails } from '@entities/document/document.hooks'
 import { documentQueryOptions } from '@renderer/entities/document/document.api'
+import { setActiveDocumentPage } from '@renderer/entities/document/document.lib'
 import { Loader } from '@renderer/shared/ui/loader'
 import { useQuery } from '@tanstack/react-query'
 
@@ -26,7 +27,13 @@ export default function Sidebar(): React.JSX.Element {
 
         {error && <p className="text-center text-sm text-destructive">{error}</p>}
 
-        {hasPdfLoaded && <PdfThumbnailList thumbnails={thumbnails} />}
+        {hasPdfLoaded && (
+          <PdfThumbnailList
+            thumbnails={thumbnails}
+            activePage={document?.activePage ?? 1}
+            onSelectPage={setActiveDocumentPage}
+          />
+        )}
       </div>
     </aside>
   )
