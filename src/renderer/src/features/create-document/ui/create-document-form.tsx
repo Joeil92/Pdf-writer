@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form'
 import type { Document } from '@entities/document'
+import { Button } from '@shared/ui/button'
 
 type CreateDocumentFormValues = Pick<Document, 'title'>
 
@@ -23,12 +24,7 @@ export function CreateDocumentForm({ onSubmit }: CreateDocumentFormProps): React
         placeholder="Titre du document"
         className="rounded border border-slate-700 bg-slate-800 px-3 py-2 outline-none focus:border-slate-500"
       />
-      <button
-        type="submit"
-        className="rounded bg-indigo-600 px-4 py-2 font-medium hover:bg-indigo-500"
-      >
-        Créer
-      </button>
+      <Button type="submit">Créer</Button>
     </form>
   )
 }
