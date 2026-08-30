@@ -1,4 +1,4 @@
-import { HomePage } from '@pages/home'
+import { HomePage } from '@pages/home/home-page'
 import { queryClient } from '@renderer/shared/query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
